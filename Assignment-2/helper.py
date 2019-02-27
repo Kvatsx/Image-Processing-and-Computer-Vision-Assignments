@@ -28,7 +28,7 @@ def GaussianValue(x, y, var=1.0):
     return val/den
 
 def MyGaussianKernel(kSizeX, kSizeY, var):
-    kernel = np.zeros((kSizeX, kSizeY))
+    kernel = np.zeros((kSizeX, kSizeY), dtype=np.float64)
     kCenterX = kSizeX//2
     kCenterY = kSizeY//2
     total = 0.0
@@ -67,12 +67,13 @@ def Thresholding(image):
     Result = np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
     for i in range(image.shape[0]):
         for j in range(image.shape[1]):
-            if image[i, j] < 0:
-                Result[i, j] = 0
-            else:
+            if image[i, j] < 128:
                 Result[i, j] = 255
+            else:
+                Result[i, j] = 0
     print(Result)
     return Result
+
 
 def LaplacianEdgeDetection(image, ksize):
     print("```Laplacian Edge Detection```")
