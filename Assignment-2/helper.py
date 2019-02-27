@@ -24,7 +24,7 @@ def DownsampleMyImage(image):
 def GaussianValue(x, y, var=1.0):
     s = 2.0*var*var
     val = math.exp(-((x*x+y*y) /s ))
-    den = math.pi * s
+    den = math.sqrt(math.pi * s)
     return val/den
 
 def MyGaussianKernel(kSizeX, kSizeY, var):
@@ -40,6 +40,11 @@ def MyGaussianKernel(kSizeX, kSizeY, var):
             kernel[i, j] = val
             total += val
     kernel = kernel/total
+    # num=0
+    # for i in range(kSizeX):
+    #     for j in range(kSizeY):
+    #         num += kernel[i, j]
+    # print("Ker", num)
     return kernel
 
 def GaussianFilter(image, kSizeX, kSizeY, var):
