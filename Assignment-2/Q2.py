@@ -33,10 +33,11 @@ Points_2d_all = []
 
 for i in range(1, 16):
     Image = cv2.imread("q2_img/Left"+str(i)+".bmp", 0)
-    print(Image.shape)
+    # print(Image.shape)
     ret, corners = cv2.findChessboardCorners(Image, (12, 12), None)
     # ret, corners = cv2.findChessboardCorners(Image, (13, 13), None)
     if ret == True:
+        print("i:", i)
         Points_3d_all.append(Points_3d)
         corners2 = cv2.cornerSubPix(Image, corners, (11, 11), (-1, -1), criteria)
         Points_2d_all.append(corners)
@@ -55,10 +56,11 @@ ret, cMatrix, dMatrix, rVector, tVector = cv2.calibrateCamera(Points_3d_all, Poi
 # Image = cv2.imread("q2_img/Left2.bmp", 0)
 # heigth, width = Image.shape[:2]
 # NewCamMatrix, roi = cv2.getOptimalNewCameraMatrix(cMatrix, dMatrix, (width, heigth), 1, (width, heigth))
-
+# print("NewCam:", NewCamMatrix)
 # dMatrix = cv2.undistort(Image, cMatrix, dMatrix, None, NewCamMatrix)
 # x, y, w, h = roi
 # dMatrix = dMatrix[y:y+h, x:x+w]
+# cv2.imwrite('q2_img/original.png', Image)
 # cv2.imwrite('q2_img/cc_result.png',dMatrix)
 print("----Camear Calibration done----")
 
@@ -72,6 +74,12 @@ for i in range(len(Points_3d_all)):
     err = cv2.norm(Points_2d_all[i], Img_points, cv2.NORM_L2)/len(Img_points)
     error.append(err)
     Total_error += err
+print("cMatrix:", cMatrix)
+print("dMatrix:", dMatrix)
+print("ret:", ret)
+print("rVec:", rVector)
+print("tVec:", tVector)
+
 print(len(Points_3d_all))
 print(error)
 print("Error:", Total_error/len(Points_3d_all))

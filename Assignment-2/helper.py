@@ -12,13 +12,14 @@ def ShowResults(original, result, title):
     plt.xticks([]), plt.yticks([])
 
 def DownsampleMyImage(image):
-    result = np.zeros((image.shape[0]//2, image.shape[1]//2), dtype=np.uint8)
+    result = np.zeros((image.shape[0]//2, image.shape[1]//2, image.shape[2]), dtype=np.uint8)
     for i in range(result.shape[0]):
         for j in range(result.shape[1]):
-            x = i*2
-            y = j*2
-            num = image[x, y]
-            result[i, j] = num
+            for k in range(result.shape[2]):
+                x = i*2
+                y = j*2
+                num = image[x, y, k]
+                result[i, j, k] = num
     return result
 
 def GaussianValue(x, y, var=1.0):

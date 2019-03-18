@@ -6,7 +6,7 @@ from __future__ import division
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from helper import MyGaussianKernel
+from helper import MyGaussianKernel, DownsampleMyImage
 from numpy import linalg as LA
 from math import log10
 from tqdm import tqdm
@@ -26,7 +26,10 @@ def getGradients(image):
 		# dy[i, image.shape[0]-1] = -image[i, j]		
 
 	return dx, dy
-def Thresholding(image, thresh, kSize):
+def Thresholding(image, thresh, kSize, flag=False):
+	if flag:
+		image = np.transpose(image)
+		image = np.flip(image, 1)
 	img1 = np.zeros(image.shape, dtype=np.uint8)
 	img2 = np.zeros(image.shape, dtype=np.uint8)
 	img3 = np.zeros(image.shape, dtype=np.uint8)
@@ -53,7 +56,7 @@ def Thresholding(image, thresh, kSize):
 					row = i - kCenterX + k
 					col = j - kCenterY + l
 					if ( row >= 0 and row < RMatrix.shape[0] and col >= 0 and col < RMatrix.shape[1] ):
-						if (row != i and col != j and RMatrix[row, col] < center ):
+						if (row != i and col != j and RMatrix[row, col] > center ):
 							flag = 0
 							break
 				if flag == 0:
@@ -95,39 +98,18 @@ def Thresholding(image, thresh, kSize):
 						ig[i+1, j+1, 1] = 0
 						ig[i+1, j+1, 2] = 0
 						
-				# if center > thresh[0]:
-				# 	# img1[i, j, 0] = 255
-				# 	# img1[i, j, 1] = 0
-				# 	# img1[i, j, 2] = 0
-					
-				# if center > thresh[1]:
-				# 	img2[i, j, 0] = 255
-				# 	img2[i, j, 1] = 0
-				# 	img2[i, j, 2] = 0
-				# if center > thresh[2]:
-				# 	img3[i, j, 0] = 255
-				# 	img3[i, j, 1] = 0
-				# 	img3[i, j, 2] = 0
-
-
-	# for i in tqdm(range(len(result))):
-	# 	x = int(result[i, 0])
-	# 	y = int(result[i, 1])
-	# 	R = float(rvalues[i])
-	# 	if R >= thresh[0]:
-			# img1[x, y, 0] = 255
-			# img1[x, y, 1] = 0
-			# img1[x, y, 2] = 0
-	# 	if R >= thresh[1]:
-	# 		img2[x, y, 0] = 255
-	# 		img2[x, y, 1] = 0
-	# 		img2[x, y, 2] = 0
 	cv2.imwrite("q3_img/T1_HCD.png", img1)
 	cv2.imwrite("q3_img/T2_HCD.png", img2)
 	cv2.imwrite("q3_img/T3_HCD.png", img3)
 
-def HarrisCornerDetection(image, kSize, sD):
+def HarrisCornerDetection(image, kSize, sD, flip=False):
 	image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+	if flip:
+		image = np.transpose(image)
+		image = np.flip(image, 1)
+
+	cv2.imwrite("q3_img/Original.png", image)
 	kernel = MyGaussianKernel(kSize, kSize, sD)
 	# print(kernel)
 	kCenterX = kSize//2
@@ -182,8 +164,25 @@ def HarrisCornerDetection(image, kSize, sD):
 
 
 # In[]       
-Image = cv2.imread("q3_img/flower.jpg", 1)
+# Image = cv2.imread("q3_img/chess.png", 1)
+# Image = cv2.imread("q3_img/yosemite1.jpg", 1)
+
 # Image = cv2.imread("q3_img/flower.jpg", 1)
 # HarrisCornerDetection(Image, 7, 1.5)
-Thresholding(Image, [10, 100, 1000], 3)
+# Thresholding(Image, [100, 1000, 10000], 3)
+
+
+# In[]
+# Part2
+# Image = cv2.imread("q3_img/rotflower.jpg", 1)
+# # HarrisCornerDetection(Image, 7, 1.5)
+# Thresholding(Image, [100, 1000, 10000], 3)
+
+# In[]
+#Downsampled Image
+Image = cv2.imread("q3_img/flower.jpg", 1)
+Image = DownsampleMyImage(Image)
+HarrisCornerDetection(Image, 7, 1.5)
+Thresholding(Image, [100, 1000, 10000], 3)
+
 
