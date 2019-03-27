@@ -102,6 +102,21 @@ class SeedPointSegmentation:
         self.Result = np.copy(image)
         self.SeedBGR = [image[seedPoint[0], seedPoint[1], 0], image[seedPoint[0], seedPoint[1], 1], image[seedPoint[0], seedPoint[1], 2]]
 
+    def checkPoints(self, point):
+        if point[0] >= self.Result.shape[0] or point[0] < 0:
+            return 0
+        if point[1] >= self.Result.shape[1] or point[1] < 0:
+            return 0
+        if not self.Visited[point[0]-1, point[1]] == 1:
+            return 1
+        if not self.Visited[point[0]+1, point[1]] == 1:
+            return 1
+        if not self.Visited[point[0], point[1]-1] == 1:            
+            return 1
+        if not self.Visited[point[0], point[1]+1] == 1:
+            return 1
+
+
     def run(self, point):
         if point[0] >= self.Result.shape[0] or point[0] < 0:
             return
@@ -123,10 +138,14 @@ class SeedPointSegmentation:
                 self.Result[point[0], point[1], 1] = 0
                 self.Result[point[0], point[1], 2] = 0
             self.Visited[point[0], point[1]] = 1
-            self.run([point[0]-1, point[1]])
-            self.run([point[0]+1, point[1]])
-            self.run([point[0], point[1]-1])
-            self.run([point[0], point[1]+1])
+            if self.checkPoints([point[0]-1, point[1]]) == 1:
+                self.run([point[0]-1, point[1]])
+            if self.checkPoints([point[0]+1, point[1]]) == 1:
+                self.run([point[0]+1, point[1]])
+            if self.checkPoints([point[0], point[1]-1]) == 1:            
+                self.run([point[0], point[1]-1])
+            if self.checkPoints([point[0], point[1]+1]) == 1:
+                self.run([point[0], point[1]+1])
     
     def ShowResults(self, filename):
         cv2.imwrite(filename, self.Result)
