@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 from helper import *
+from queue import Queue
 
 # Functions For Skin Based Thresholding --------------------------------------
 # Part 1 ------------------------------------------------------------------------------
@@ -91,16 +92,20 @@ def SkinAlgo2(image, filename="./Q3-output/result.png"):
 
 # Part3 ------------------------------------------------------------------------------
 class SeedPointSegmentation:
+    Image = None
     Visited = None
     Result = None
     SeedBGR = None
     Tolerance = None
+    Q = None
 
     def __init__(self, image, seedPoint, tolerance):
+        self.Image = image
         self.Tolerance = int(tolerance * 255 / 100)
         self.Visited = np.zeros((image.shape[0], image.shape[1]), dtype=np.int)
-        self.Result = np.copy(image)
+        self.Result = np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
         self.SeedBGR = [image[seedPoint[0], seedPoint[1], 0], image[seedPoint[0], seedPoint[1], 1], image[seedPoint[0], seedPoint[1], 2]]
+        self.Q = Queue()
 
     def checkPoints(self, point):
         if point[0] >= self.Result.shape[0] or point[0] < 0:
@@ -127,25 +132,29 @@ class SeedPointSegmentation:
         else:
             flag = True
             bgr = self.Result[point[0], point[1]]
-            if  not (self.SeedBGR[0] - self.Tolerance < bgr[0] and bgr[0] < self.SeedBGR[0] + self.Tolerance):
+            if not (self.SeedBGR[0] - self.Tolerance < bgr[0] and bgr[0] < self.SeedBGR[0] + self.Tolerance):
                 flag = False
-            if  not (self.SeedBGR[1] - self.Tolerance < bgr[1] and bgr[1] < self.SeedBGR[1] + self.Tolerance):
+            if not (self.SeedBGR[1] - self.Tolerance < bgr[1] and bgr[1] < self.SeedBGR[1] + self.Tolerance):
                 flag = False
-            if  not (self.SeedBGR[2] - self.Tolerance < bgr[2] and bgr[2] < self.SeedBGR[2] + self.Tolerance):
+            if not (self.SeedBGR[2] - self.Tolerance < bgr[2] and bgr[2] < self.SeedBGR[2] + self.Tolerance):
                 flag = False
             if not flag:
-                self.Result[point[0], point[1], 0] = 0
-                self.Result[point[0], point[1], 1] = 0
-                self.Result[point[0], point[1], 2] = 0
+                self.Result[point[0], point[1], 0] = self.Image[point[0], point[1], 0]
+                self.Result[point[0], point[1], 1] = self.Image[point[0], point[1], 1]
+                self.Result[point[0], point[1], 2] = self.Image[point[0], point[1], 2]
+
             self.Visited[point[0], point[1]] = 1
+
             if self.checkPoints([point[0]-1, point[1]]) == 1:
-                self.run([point[0]-1, point[1]])
+                self.Q.put([point[0]-1, point[1]])
             if self.checkPoints([point[0]+1, point[1]]) == 1:
-                self.run([point[0]+1, point[1]])
+                self.Q.put([point[0]+1, point[1]])
             if self.checkPoints([point[0], point[1]-1]) == 1:            
-                self.run([point[0], point[1]-1])
+                self.Q.put([point[0], point[1]-1])
             if self.checkPoints([point[0], point[1]+1]) == 1:
-                self.run([point[0], point[1]+1])
+                self.Q.put([point[0], point[1]+1])
+            print(self.Q.qsize())
+            self.run(self.Q.get())
     
     def ShowResults(self, filename):
         cv2.imwrite(filename, self.Result)
@@ -162,6 +171,6 @@ Image = cv2.imread("./Q3-faces/" + ImageList[3])
 # SkinAlgo2(Image, "./Q3-output/x" + ImageList[1])
 
 seedPoint = [160, 130]
-Seedps = SeedPointSegmentation(Image, seedPoint, 2)
+Seedps = SeedPointSegmentation(Image, seedPoint, 10)
 Seedps.run(seedPoint)
 Seedps.ShowResults("./Q3-output/p2_" + ImageList[3])
