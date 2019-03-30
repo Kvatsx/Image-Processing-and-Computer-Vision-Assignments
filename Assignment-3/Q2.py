@@ -8,15 +8,15 @@ from sklearn.cluster import MeanShift, estimate_bandwidth
 # Image Reading ----------------------------------------------------------------------------
 
 ImageList = ["iceCream1.jpg", "iceCream2.jpg", "iceCream3.jpg", "colors.jpg"]
-No = 1
+No = 0
 Image = cv2.imread("./Q2-images/"+ImageList[No])
-
+Image = cv2.resize(Image, None, fx=0.5, fy=0.5)
 # Reshape Image -------------------------------------------------------------
 Image2 = np.reshape(Image, [-1, 3])
 print("New Shape", Image2.shape)
 
 # Find Clusters --------------------------------------------------------------
-bandwidth = estimate_bandwidth(Image2, quantile=0.2, n_samples=500)
+bandwidth = estimate_bandwidth(Image2, quantile=0.2, n_samples=1000)
 MS = MeanShift(bandwidth, bin_seeding=True)
 MS.fit(Image2)
 

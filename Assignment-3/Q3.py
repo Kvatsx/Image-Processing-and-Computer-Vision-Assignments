@@ -97,7 +97,8 @@ class SeedPointSegmentation:
     Result = None
     SeedBGR = None
     Tolerance = None
-    Q = None
+    Average = None
+    Count = None
 
     def __init__(self, image, seedPoint, tolerance):
         self.Image = image
@@ -105,72 +106,81 @@ class SeedPointSegmentation:
         self.Visited = np.zeros((image.shape[0], image.shape[1]), dtype=np.int)
         self.Result = np.zeros((image.shape[0], image.shape[1], 3), dtype=np.uint8)
         self.SeedBGR = [image[seedPoint[0], seedPoint[1], 0], image[seedPoint[0], seedPoint[1], 1], image[seedPoint[0], seedPoint[1], 2]]
-        self.Q = Queue()
+        self.Average = [float(image[seedPoint[0], seedPoint[1], 0]), float(image[seedPoint[0], seedPoint[1], 1]), float(image[seedPoint[0], seedPoint[1], 2])]
+        self.Count = 1
 
-    def checkPoints(self, point):
-        if point[0] >= self.Result.shape[0] or point[0] < 0:
-            return 0
-        if point[1] >= self.Result.shape[1] or point[1] < 0:
-            return 0
-        if not self.Visited[point[0]-1, point[1]] == 1:
+    def checkPoint(self, point):
+        if point[0] > 0 and point[0] < self.Image.shape[0] and point[1] > 0 and point[1] < self.Image.shape[1]:
+            if self.Visited[point[0], point[1]] == 1:
+                return 0
             return 1
-        if not self.Visited[point[0]+1, point[1]] == 1:
+        return 0
+    
+    def updatePixel(self, point):
+        B = abs(float(self.Image[point[0], point[1], 0]) - float(self.Average[0]/self.Count))
+        G = abs(float(self.Image[point[0], point[1], 1]) - float(self.Average[1]/self.Count))
+        R = abs(float(self.Image[point[0], point[1], 2]) - float(self.Average[2]/self.Count))
+        
+        if B < self.Tolerance and G < self.Tolerance and R < self.Tolerance:
+            self.Result[point[0], point[1], 0] = self.Image[point[0], point[1], 0]
+            self.Result[point[0], point[1], 1] = self.Image[point[0], point[1], 1]
+            self.Result[point[0], point[1], 2] = self.Image[point[0], point[1], 2]
+            self.Average[0] += float(self.Image[point[0], point[1], 0])
+            self.Average[1] += float(self.Image[point[0], point[1], 1])
+            self.Average[2] += float(self.Image[point[0], point[1], 2])
+            self.Count += 1
             return 1
-        if not self.Visited[point[0], point[1]-1] == 1:            
-            return 1
-        if not self.Visited[point[0], point[1]+1] == 1:
-            return 1
-
-
-    def run(self, point):
-        if point[0] >= self.Result.shape[0] or point[0] < 0:
-            return
-        if point[1] >= self.Result.shape[1] or point[1] < 0:
-            return
-        if self.Visited[point[0], point[1]] == 1:
-            return
-        else:
-            flag = True
-            bgr = self.Result[point[0], point[1]]
-            if not (self.SeedBGR[0] - self.Tolerance < bgr[0] and bgr[0] < self.SeedBGR[0] + self.Tolerance):
-                flag = False
-            if not (self.SeedBGR[1] - self.Tolerance < bgr[1] and bgr[1] < self.SeedBGR[1] + self.Tolerance):
-                flag = False
-            if not (self.SeedBGR[2] - self.Tolerance < bgr[2] and bgr[2] < self.SeedBGR[2] + self.Tolerance):
-                flag = False
-            if not flag:
-                self.Result[point[0], point[1], 0] = self.Image[point[0], point[1], 0]
-                self.Result[point[0], point[1], 1] = self.Image[point[0], point[1], 1]
-                self.Result[point[0], point[1], 2] = self.Image[point[0], point[1], 2]
-
-            self.Visited[point[0], point[1]] = 1
-
-            if self.checkPoints([point[0]-1, point[1]]) == 1:
-                self.Q.put([point[0]-1, point[1]])
-            if self.checkPoints([point[0]+1, point[1]]) == 1:
-                self.Q.put([point[0]+1, point[1]])
-            if self.checkPoints([point[0], point[1]-1]) == 1:            
-                self.Q.put([point[0], point[1]-1])
-            if self.checkPoints([point[0], point[1]+1]) == 1:
-                self.Q.put([point[0], point[1]+1])
-            print(self.Q.qsize())
-            self.run(self.Q.get())
+        return 0
     
     def ShowResults(self, filename):
         cv2.imwrite(filename, self.Result)
 
+    def run(self, seedPoint):
+        Q = Queue()
+        Q.put([seedPoint[0], seedPoint[1]])
+        self.Visited[seedPoint[0], seedPoint[1]] = 1
+
+        while( Q.qsize() > 0 ):
+            # print(Q.qsize())
+            CurrentPoint = Q.get()
+            Ret = self.updatePixel(CurrentPoint)
+            if Ret == 0:
+                continue
+
+            p1 = [CurrentPoint[0]+1, CurrentPoint[1]]
+            p2 = [CurrentPoint[0]-1, CurrentPoint[1]]
+            p3 = [CurrentPoint[0], CurrentPoint[1]-1]
+            p4 = [CurrentPoint[0], CurrentPoint[1]+1]
+
+            if self.checkPoint(p1):
+                Q.put(p1)
+                self.Visited[p1[0], p1[1]] = 1
+            if self.checkPoint(p2):
+                Q.put(p2)
+                self.Visited[p2[0], p2[1]]= 1
+            if self.checkPoint(p3):
+                Q.put(p3)
+                self.Visited[p3[0], p3[1]]= 1
+            if self.checkPoint(p4):
+                Q.put(p4)
+                self.Visited[p4[0], p4[1]] = 1
+
         
 
 # Image Reading ----------------------------------------------------------------------------
-ImageList = ["face1.jpg", "face2.jpg", "face3.jpg", "face4.jpg"]
+ImageList = ["face1.jpg", "face2.jpg", "face3.jpg", "face4.jpg", "colors.jpg"]
 
-Image = cv2.imread("./Q3-faces/" + ImageList[3])
-
+Image = cv2.imread("./Q3-faces/" + ImageList[2])
+print(Image.shape)
 # SkinSegmentation(Image, "./Q3-output/" + ImageList[2])
 
-# SkinAlgo2(Image, "./Q3-output/x" + ImageList[1])
+SkinAlgo2(Image, "./Q3-output/x" + ImageList[2])
 
-seedPoint = [160, 130]
-Seedps = SeedPointSegmentation(Image, seedPoint, 10)
-Seedps.run(seedPoint)
-Seedps.ShowResults("./Q3-output/p2_" + ImageList[3])
+# Seed based segmentation ---------------------------------
+# seedPoint = [600, 950]
+# seedPoint = [250, 250]
+# seedPoint = [200, 350]
+# seedPoint = [120, 150]
+# Seedps = SeedPointSegmentation(Image, seedPoint, 30)
+# Seedps.run(seedPoint)
+# Seedps.ShowResults("./Q3-output/p2_" + ImageList[3])

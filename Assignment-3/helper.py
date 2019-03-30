@@ -55,7 +55,7 @@ class KMeanCluster:
             for y in range(self. Image.shape[1]):
                 ax.scatter(self.Image[x, y, 2], self.Image[x, y, 1], self.Image[x, y, 0], color=self.bgr2hex(self.Centroids[clutserLabels[x, y]]))
         plt.show()
-        # plt.savefig("./Q1-output/ScatterPlot.png")
+        plt.savefig("./Q1-output/ScatterPlot.png")
 
     def VisualizeCluster(self, clusterLabels):
         result = np.zeros((self.Image.shape), dtype=np.uint8)
@@ -66,15 +66,15 @@ class KMeanCluster:
                 result[i, j, 1] = np.uint8(bgr[1])
                 result[i, j, 2] = np.uint8(bgr[2])
         cv2.imwrite(self.Filename, result)
-        # self.ScatterPlot(clusterLabels)
-        # cv2.imshow("K-Mean Cluster", result)
-        # cv2.waitKey(0)
+        self.ScatterPlot(clusterLabels)
+        cv2.imshow("K-Mean Cluster", result)
+        cv2.waitKey(0)
 
     def run(self):
         self.RandomClusters()
         print("Centroids:\n", self.Centroids)
         ClusterLabels = np.zeros((self.Image.shape[0], self.Image.shape[1]), dtype=np.uint8)
-        for i in tqdm(range(self.MaxIterations)):
+        for i in range(self.MaxIterations):
             for x in range(self.Image.shape[0]):
                 for y in range(self.Image.shape[1]):
                     MinDist = sys.float_info.max
@@ -169,7 +169,7 @@ class KMeanCluster5D:
         self.RandomClusters()
         print("Centroids:\n", self.Centroids)
         ClusterLabels = np.zeros((self.Image.shape[0], self.Image.shape[1]), dtype=np.uint8)
-        for i in tqdm(range(self.MaxIterations)):
+        for i in range(self.MaxIterations):
             for x in range(self.Image.shape[0]):
                 for y in range(self.Image.shape[1]):
                     MinDist = sys.float_info.max
