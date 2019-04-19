@@ -10,9 +10,24 @@ class PanoramaStiching:
 
     def __init__(self):
         return 
-    
+
+    # def combine_images(self, img0, img1, h_matrix):
+    #     points0 = np.array([[0, 0], [0, img0.shape[0]], [img0.shape[1], img0.shape[0]], [img0.shape[1], 0]], dtype=np.float32)
+    #     points0 = points0.reshape((-1, 1, 2))
+    #     points1 = np.array([[0, 0], [0, img1.shape[0]], [img1.shape[1], img0.shape[0]], [img1.shape[1], 0]], dtype=np.float32)
+    #     points1 = points1.reshape((-1, 1, 2))
+    #     points2 = cv2.perspectiveTransform(points1, h_matrix)
+    #     points = np.concatenate((points0, points2), axis=0)
+    #     [x_min, y_min] = np.int32(points.min(axis=0).ravel() - 0.5)
+    #     [x_max, y_max] = np.int32(points.max(axis=0).ravel() + 0.5)
+    #     H_translation = np.array([[1, 0, -x_min], [0, 1, -y_min], [0, 0, 1]])
+
+    #     output_img = cv2.warpPerspective(img1, H_translation.dot(h_matrix), (x_max - x_min, y_max - y_min))
+    #     output_img[-y_min:img0.shape[0] - y_min, -x_min:img0.shape[1] - x_min] = img0
+    #     return output_img
+
     def StichImages(self, img1, img2):
-        
+
         kp1, des1 = self.DetectKeyPoints(img1)
         kp2, des2 = self.DetectKeyPoints(img2)
 
@@ -23,9 +38,21 @@ class PanoramaStiching:
 
         FinalMatches, Homography, Status = Matches
 
-        # stiching the images based on the keypoints
-        Result = cv2.warpPerspective(img1, Homography, (img1.shape[1] + img2.shape[1], img1.shape[0]))
+        # Result = self.combine_images(img1, img2, Homography)
 
+        # stiching the images based on the Homography
+        Result = cv2.warpPerspective(img1, Homography, (img1.shape[1] + img2.shape[1], max(img1.shape[0], img2.shape[0])))
+        # cv2.imshow("Result", Result)
+        # cv2.waitKey(0)
+        # for i in range(img2.shape[0]):
+        #     for j in range(img2.shape[1]):
+        #         if img2[i, j, 0] == 0 and img2[i, j, 1] == 0 and img2[i, j, 2] == 0:
+        #             continue
+        #         Result[i, j, 0] = img2[i, j, 0]
+        #         Result[i, j, 1] = img2[i, j, 1]
+        #         Result[i, j, 2] = img2[i, j, 2]
+
+        # Result = cv2.resize(Result, None, fx=Result.shape[0], fy=Result.shape[1], interpolation = cv2.INTER_CUBIC)
         Result[0 : img2.shape[0], 0 : img2.shape[1]] = img2
 
         StichedImage = self.DrawMatches(img1, img2, kp1, kp2, FinalMatches, Status)
@@ -33,6 +60,7 @@ class PanoramaStiching:
 
     def DetectKeyPoints(self, img):
         sift = cv2.xfeatures2d.SIFT_create()
+        # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         kp, des = sift.detectAndCompute(img, None)
 
         FinalKps = []

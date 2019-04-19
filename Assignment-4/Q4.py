@@ -28,11 +28,14 @@ print("Image{}.shape: {}".format(3, Image3.shape))
 
 PS = PanoramaStiching()
 
-Result1, Visualization1 = PS.StichImages(Image1, Image2)
+Result1, Visualization1 = PS.StichImages(Image2, Image1)
 cv2.imwrite(SAVE + "result1.png", Result1)
 cv2.imwrite(SAVE + "Visualization1.png", Visualization1)
 
+# Result2, Visualization2 = PS.StichImages(Image3, Image2)
+# cv2.imwrite(SAVE + "result2.png", Result2)
+# cv2.imwrite(SAVE + "Visualization2.png", Visualization2)
 
-Result2, Visualization2 = PS.StichImages(Result1, Image3)
-cv2.imwrite(SAVE + "result2.png", Result2)
-cv2.imwrite(SAVE + "Visualization2.png", Visualization2)
+Result3, Visualization3 = PS.StichImages(Image3, Result1)
+cv2.imwrite(SAVE + "result3.png", Result3)
+cv2.imwrite(SAVE + "Visualization3.png", Visualization3)
