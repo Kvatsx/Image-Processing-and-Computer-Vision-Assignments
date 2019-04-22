@@ -5,6 +5,8 @@
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+import pickle
+import json
 
 class PanoramaStiching:
 
@@ -116,3 +118,55 @@ class PanoramaStiching:
         return result
 
 
+def ReadData():
+    PATH = "./Data/"
+    data = []
+    label = []
+    for i in range(1, 6):
+        with open(PATH + "Q2/data_batch_" + str(i), 'rb') as fo:
+            dict = pickle.load(fo, encoding='bytes')
+            data.append(dict[b'data'])
+            label.append(dict[b'labels'])
+
+    for i in range(1, 5):
+        data[0] = np.concatenate((data[0], data[i]), axis = 0)
+        label[0] = np.concatenate((label[0], label[i]), axis = 0)
+
+    test = []
+    test_label = []
+    with open(PATH + "Q2/test_batch", 'rb') as fo:
+        dict = pickle.load(fo, encoding='bytes')
+        test.append(dict[b'data'])
+        test_label.append(dict[b'labels'])
+
+    data = np.asarray(data[0])
+    label = np.asarray(label[0])
+    test = np.asarray(test[0])
+    test_label = np.asarray(test_label[0])
+    print("Train Data shape: {}".format(data.shape))
+    print("Test Data shape: {}".format(test.shape))
+    return data, label, test, test_label
+
+
+def ReadLabels(className):
+    PATH = "./Data/"
+    LabelsNum = []
+    with open(PATH + "Q2/batches.meta", 'rb') as data_file:
+        data = pickle.loads(data_file.read())
+        data = data['label_names']
+        for i in range(len(data)):
+            if data[i] in className:
+                LabelsNum.append(i)
+    LabelsNum = np.asarray(LabelsNum)
+    return LabelsNum
+
+def FilterData(data, labels, classNum):
+    n_data = []
+    n_label = []
+    for i in range(labels.shape[0]):
+        if labels[i] in classNum:
+            n_data.append(data[i])
+            n_label.append(labels[i])
+    n_data = np.asarray(n_data)
+    n_label = np.asarray(n_label)
+    return n_data, n_label
