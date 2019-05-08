@@ -7,6 +7,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pickle
 import json
+import torch
 
 class PanoramaStiching:
 
@@ -170,3 +171,12 @@ def FilterData(data, labels, classNum):
     n_data = np.asarray(n_data)
     n_label = np.asarray(n_label)
     return n_data, n_label
+
+def Turn2DataLoader(data, label):
+    dataloader = []
+    for i in range(data.shape[0]):
+        img = np.reshape(data[i], (3, 32, 32))
+        img = torch.from_numpy(img.astype(np.float64))
+        dataloader.append((img, label[i]))
+    return dataloader
+
